@@ -458,14 +458,25 @@ async function getNamespace(params: {
 }) {
   const { subject, headers, options, data = {} } = params;
 
-  let result: {
-    code: 'OK' | 400 | 401 | 403 | 500;
-    namespace?: string;
-  };
+  let result:
+    | {
+        code: 'OK';
+        namespace?: string;
+      }
+    | {
+        code: 400 | 401 | 403 | 500;
+        errors?: string;
+      };
 
-  const shouldSetNamespace = config.natsNamespaceSubjects?.includes(subject);
+  const hasNamespaceSubject = config.natsNamespaceSubjects?.includes(subject);
+  const forceUseNamespaceSubject = config.forceUseNamespaceSubject;
 
-  if (shouldSetNamespace) {
+  if (forceUseNamespaceSubject && !hasNamespaceSubject) {
+    result = { code: 400, errors: `Namespace required for ${subject}` };
+    return result;
+  }
+
+  if (hasNamespaceSubject) {
     const natsRequest: NatsRequest<unknown> = {
       headers,
       body: { subject, ...data },

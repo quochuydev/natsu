@@ -19,6 +19,7 @@ type Config = {
   port: number;
   credentials: boolean;
   origin: string[];
+  forceUseNamespaceSubject: boolean;
 };
 
 const schema = yup.object({
@@ -45,6 +46,7 @@ const schema = yup.object({
   httpPath: yup.string(),
   wsPath: yup.string(),
   port: yup.number().lessThan(65000).moreThan(0),
+  forceUseNamespaceSubject: yup.bool().required(),
 });
 
 const config: Config = {
@@ -83,6 +85,8 @@ const config: Config = {
       )
     : ['*'],
   credentials: process.env.SERVER_CREDENTIALS === 'true',
+  forceUseNamespaceSubject:
+    process.env.FORCE_USE_NATS_NAMESPACE_SUBJECT === 'true',
 };
 
 try {
