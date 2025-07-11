@@ -24,7 +24,21 @@ import type {
 } from './type';
 
 class UnhandledMiddlewareError extends Error {}
-class UnhandledHandleError extends Error {}
+
+class UnhandledHandleError extends Error {
+  [key: string]: any;
+
+  constructor(error: Error) {
+    super();
+    this.name = 'UnhandledHandleError';
+    this.message = error.message;
+    this.stack = error.stack;
+
+    Object.keys(error || {}).forEach((key) => {
+      this[key] = error[key];
+    });
+  }
+}
 
 type registeredHandlers = {
   [subject: string]: {
@@ -811,8 +825,8 @@ async function respondUnhandledError<
     request: data,
     response: {
       headers: data?.headers,
-      body: data?.body,
-      code: 500,
+      body: error['error'] || error,
+      code: error['code'] || 500,
     },
     injection,
     onResponse: handler.response,
@@ -826,7 +840,6 @@ async function respond<
   message: Msg;
   request: NatsRequest<TService['request']>;
   response: Pick<NatsResponse, 'headers' | 'code'> & {
-    code: number;
     body: TService['response'];
   };
   injection: TInjection & NatsInjection<TService, TInjection>;
